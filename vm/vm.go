@@ -16,6 +16,8 @@ type Machine struct {
 	//YKTV, bf has "." & "," for reading and writing to STD
 	input  io.Reader
 	output io.Writer
+	//buffer for read & writes to STD
+	buf []byte
 }
 
 //Get a new instance of the machine
@@ -24,13 +26,13 @@ func NewMachine(c string, in io.Reader, out io.Writer) *Machine{
 		code:    c,
 		input:   in,
 		output:  out,
+		buf: make([]byte, 1),
 	}
 }
 
 func (m *Machine) Run() {
 	//Loop for as long as the instruction pointer is less than the length of the code written
 	for m.ip < len(m.code) {
-
 		switch m.code[m.ip] {
 		case '+':
 			m.memory[m.dp]++
@@ -40,8 +42,37 @@ func (m *Machine) Run() {
 			m.dp++
 		case '<':
 			m.dp--
+		case ',':
+			m.readChar()
+		case '.':
+			m.putChar()
 		}
 
+
 		m.ip++
+	}
+}
+
+func (m *Machine) readChar() {
+	n, err := m.input.Read(m.buf)
+	if err != nil {
+		panic(err)
+	}
+	if n != 1 {
+		panic("wrong num bytes read")
+	}
+
+	m.memory[m.dp] = int(m.buf[0])
+}
+
+func (m *Machine) putChar() {
+	m.buf[0] = byte(m.memory[m.dp])
+
+	n, err := m.output.Write(m.buf)
+	if err != nil {
+		panic(err)
+	}
+	if n != 1 {
+		panic("wrong num bytes written")
 	}
 }
