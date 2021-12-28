@@ -34,6 +34,32 @@ func (m *Machine) Run() {
 	//Loop for as long as the instruction pointer is less than the length of the code written
 	for m.ip < len(m.code) {
 		switch m.code[m.ip] {
+		case '[':
+			if m.memory[m.dp] == 0 {
+				depth := 1
+				for depth != 0 {
+					m.ip++
+					switch m.code[m.ip] {
+					case '[':
+						depth++
+					case ']':
+						depth--
+					}
+				}
+			}
+		case ']':
+			if m.memory[m.dp] != 0 {
+				depth := 1
+				for depth != 0 {
+					m.ip--
+					switch m.code[m.ip] {
+					case ']':
+						depth++
+					case '[':
+						depth--
+					}
+				}
+			}
 		case '+':
 			m.memory[m.dp]++
 		case '-':
